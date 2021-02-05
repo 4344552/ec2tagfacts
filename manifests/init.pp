@@ -18,11 +18,11 @@
 #   awscli must be installed by other means.
 #
 # [*enable_epel*]
-#   True to enable EPEL automatically, false not to. Automatically set in 
+#   True to enable EPEL automatically, false not to. Automatically set in
 #   ec2tagfacts::params based on OS family.
 #
 # [*pippkg*]
-#   Set in ec2tagfacts::params, this is the Python pip package name by OS 
+#   Set in ec2tagfacts::params, this is the Python pip package name by OS
 #   family. False disables python pip package management.
 #
 # [*awscli*]
@@ -77,7 +77,6 @@ class ec2tagfacts (
 
 ) inherits ec2tagfacts::params {
 
-
   if (!is_string($aws_access_key_id)) {
     fail('ERROR: ec2tagfacts::aws_access_key_id must be a string')
   }
@@ -87,6 +86,7 @@ class ec2tagfacts (
   }
 
   if $manage_awscli {
+
     if $enable_epel {
       include ::epel
     }
@@ -96,22 +96,27 @@ class ec2tagfacts (
       if $enable_epel {
         Class['epel'] -> Package[$pippkg]
       }
-
-      package { $pippkg:
-        ensure => 'installed',
+      if ! defined(Package[$pippkg]) {
+        package { $pippkg:
+          ensure => 'installed',
+        }
       }
 
-      package { $awscli:
-        ensure   => 'installed',
-        provider => $awscli_pkg,
-        require  => Package[$pippkg],
+      if ! defined(Package[$awscli]) {
+        package { $awscli:
+          ensure   => 'installed',
+          provider => $awscli_pkg,
+          require  => Package[$pippkg],
+        }
       }
 
     } else {
 
-      package { $awscli:
-        ensure   => 'installed',
-        provider => $awscli_pkg,
+      if ! defined(Package[$awscli]) {
+        package { $awscli:
+          ensure   => 'installed',
+          provider => $awscli_pkg,
+        }
       }
 
     }
@@ -127,11 +132,13 @@ class ec2tagfacts (
   if ($aws_secret_access_key != undef) and ($aws_access_key_id != undef) {
 
     $directory = dirname($aws_cli_ini_settings)
+
     file { $directory:
       ensure  => directory,
       require => Package[$awscli],
       recurse => true,
     }
+
     ini_setting { 'aws_access_key_id setting':
       ensure  => present,
       path    => $aws_cli_ini_settings,
@@ -140,6 +147,7 @@ class ec2tagfacts (
       value   => $aws_access_key_id,
       require => File[$directory],
     }
+
     ini_setting { 'aws_secret_access_key setting':
       ensure  => present,
       path    => $aws_cli_ini_settings,
