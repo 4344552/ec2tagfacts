@@ -94,7 +94,7 @@ else
     # Making up to 6 attempts with sleep time ranging between 4-10 seconds after each unsuccessful attempt
     for i in 1..6
       # This is why aws cli is required
-      jsonString = `aws ec2 describe-tags --filters "Name=resource-id,Values=#{instance_id}" --region #{region} --output json`
+      jsonString = `AWS_SHARED_CREDENTIALS_FILE="/root/.aws/ec2tag" aws ec2 describe-tags --filters "Name=resource-id,Values=#{instance_id}" --region #{region} --output json`
       break if jsonString != ''
       sleep rand(4..10)
     end
