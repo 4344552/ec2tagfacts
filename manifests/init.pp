@@ -133,10 +133,12 @@ class ec2tagfacts (
 
     $directory = dirname($aws_cli_ini_settings)
 
-    file { $directory:
-      ensure  => directory,
-      require => Package[$awscli],
-      recurse => true,
+    if ! defined(File[$directory]){
+      file { $directory:
+        ensure  => directory,
+        require => Package[$awscli],
+        recurse => true,
+      }
     }
 
     ini_setting { 'aws_access_key_id setting':
